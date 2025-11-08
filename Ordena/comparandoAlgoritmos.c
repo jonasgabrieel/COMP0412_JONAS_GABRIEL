@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Funções auxiliares
+// ===================================================================
+// FUNÇÕES AUXILIARES
+// ===================================================================
 
 void swap(int* a, int* b) {
     int t = *a;
@@ -16,38 +18,37 @@ void copyArray(int* origem, int* destino, int n) {
     }
 }
 
-void printArray(int* A, int n) {
-    int max_print = (n < 10) ? n : 10;
-    for (int i = 0; i < max_print; i++) {
-        printf("%d ", A[i]);
-    }
-    if (n > 10) {
-        printf("... (mais %d elementos)", n - 10);
-    }
-    printf("\n");
-}
+// ===================================================================
+// GERADORES DE VETORES
+// ===================================================================
 
-// Geradores de vetores
-
-void generateRandomArray(int* A, int n) {
+int* generateRandomArray(int n) {
+    int* A = (int*)malloc(n * sizeof(int));
     for (int i = 0; i < n; i++) {
         A[i] = rand() % (n * 10);
     }
+    return A;
 }
 
-void generateSortedArray(int* A, int n) {
+int* generateSortedArray(int n) {
+    int* A = (int*)malloc(n * sizeof(int));
     for (int i = 0; i < n; i++) {
         A[i] = i;
     }
+    return A;
 }
 
-void generateReverseSortedArray(int* A, int n) {
+int* generateReverseSortedArray(int n) {
+    int* A = (int*)malloc(n * sizeof(int));
     for (int i = 0; i < n; i++) {
         A[i] = n - 1 - i;
     }
+    return A;
 }
 
-// Insertion Sort 
+// ===================================================================
+// INSERTION SORT
+// ===================================================================
 
 void insertionSort(int *A, int n) {
     int i, key, j;
@@ -62,7 +63,9 @@ void insertionSort(int *A, int n) {
     }
 }
 
-// Merge Sort
+// ===================================================================
+// MERGE SORT
+// ===================================================================
 
 void merge(int* A, int l, int m, int r) {
     int i, j, k;
@@ -120,20 +123,14 @@ void mergeSort(int *A, int n) {
     mergeSortRecursive(A, 0, n - 1);
 }
 
-//Quick Sort com Pivô Aleatório
+// ===================================================================
+// QUICK SORT COM PIVÔ ALEATÓRIO
+// ===================================================================
 
-/**
- * Escolhe um pivô aleatório e coloca na última posição.
- * Isso evita o pior caso O(n²) em vetores já ordenados.
- */
 int partitionRandomized(int* A, int low, int high) {
-    // Escolhe um índice aleatório entre low e high
     int randomIndex = low + rand() % (high - low + 1);
-    
-    // Troca o elemento aleatório com o último
     swap(&A[randomIndex], &A[high]);
     
-    // Agora faz a partição normal usando o último como pivô
     int pivot = A[high];
     int i = (low - 1);
 
@@ -155,81 +152,162 @@ void quickSortRecursive(int* A, int low, int high) {
     }
 }
 
-/**
- * Ordena o vetor A[0..n-1] usando Quick Sort com pivô aleatório.
- * Complexidade:
- * Melhor Caso: O(n log n)
- * Médio Caso: O(n log n)
- * Pior Caso: O(n²) - MAS muito improvável com pivô aleatório
- */
 void quickSort(int *A, int n) {
     quickSortRecursive(A, 0, n - 1);
 }
 
-// FUNÇÃO DE TESTE
-
-void runSortTest(void (*sortFunction)(int*, int), int* A, int* original, int n, const char* algorithmName) {
-    copyArray(original, A, n);
-
-    clock_t start, end;
-    double cpu_time_used;
-
-    start = clock();
-    sortFunction(A, n);
-    end = clock();
-
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    
-    printf("  %-15s: %f segundos\n", algorithmName, cpu_time_used);
-}
+// ===================================================================
+// MAIN - COM PARÂMETROS CONFIGURÁVEIS
+// ===================================================================
 
 int main() {
     srand(time(NULL));
 
-    int sizes[] = {10000, 50000, 100000, 200000, 250000};
-    int num_sizes = sizeof(sizes) / sizeof(sizes[0]);
+    // ===== CONFIGURAÇÕES =====
+    int repet = 10;           // Número de repetições por tamanho
+    int inicio = 100000;      // Tamanho inicial do vetor
+    int fim = 200000;        // Tamanho final do vetor
+    int step = 10000;        // Incremento
+    // =========================
 
-    for (int i = 0; i < num_sizes; i++) {
-        int n = sizes[i];
-        printf("\n============================================\n");
-        printf("Iniciando testes para n = %d\n", n);
-        printf("============================================\n");
+    FILE* csvFile = fopen("resultados_ordenacao.csv", "w");
+    if (csvFile == NULL) {
+        printf("Erro ao criar arquivo CSV.\n");
+        return 1;
+    }
 
-        int* original = (int*)malloc(n * sizeof(int));
-        int* A = (int*)malloc(n * sizeof(int));
+    // Cabeçalho do CSV
+    fprintf(csvFile, "Repeticao,Tamanho,Tipo_Vetor,Algoritmo,Tempo\n");
 
-        if (original == NULL || A == NULL) {
-            printf("Erro ao alocar memória.\n");
-            return 1;
+    printf("============================================\n");
+    printf("INICIANDO TESTES DE ORDENACAO\n");
+    printf("============================================\n");
+    printf("Repeticoes: %d\n", repet);
+    printf("Tamanho: %d ate %d (incremento: %d)\n", inicio, fim, step);
+    printf("============================================\n\n");
+
+    // Loop pelos tamanhos
+    for (int tamanho = inicio; tamanho <= fim; tamanho += step) {
+        printf("\n>>> Testando tamanho: %d\n", tamanho);
+        /*
+        // ===== VETOR ALEATÓRIO =====
+        printf("\n--- Vetor Aleatorio ---\n");
+        for (int rep = 1; rep <= repet; rep++) {
+            int* vetor_original = generateRandomArray(tamanho);
+            int* vetor_trabalho = (int*)malloc(tamanho * sizeof(int));
+
+            // Insertion Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            clock_t start = clock();
+            insertionSort(vetor_trabalho, tamanho);
+            clock_t end = clock();
+            double tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Aleatorio,InsertionSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Insertion Sort: %.6f s\n", rep, tempo);
+
+            // Merge Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            start = clock();
+            mergeSort(vetor_trabalho, tamanho);
+            end = clock();
+            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Aleatorio,MergeSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Merge Sort: %.6f s\n", rep, tempo);
+
+            // Quick Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            start = clock();
+            quickSort(vetor_trabalho, tamanho);
+            end = clock();
+            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Aleatorio,QuickSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Quick Sort: %.6f s\n", rep, tempo);
+
+            free(vetor_original);
+            free(vetor_trabalho);
+        }
+        */
+
+        // ===== VETOR CRESCENTE =====
+        printf("\n--- Vetor Crescente ---\n");
+        for (int rep = 1; rep <= repet; rep++) {
+            int* vetor_original = generateSortedArray(tamanho);
+            int* vetor_trabalho = (int*)malloc(tamanho * sizeof(int));
+
+            // Insertion Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            clock_t start = clock();
+            insertionSort(vetor_trabalho, tamanho);
+            clock_t end = clock();
+            double tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Crescente,InsertionSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Insertion Sort: %.6f s\n", rep, tempo);
+
+            // Merge Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            start = clock();
+            mergeSort(vetor_trabalho, tamanho);
+            end = clock();
+            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Crescente,MergeSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Merge Sort: %.6f s\n", rep, tempo);
+
+            // Quick Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            start = clock();
+            quickSort(vetor_trabalho, tamanho);
+            end = clock();
+            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Crescente,QuickSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Quick Sort: %.6f s\n", rep, tempo);
+
+            free(vetor_original);
+            free(vetor_trabalho);
         }
 
-        // --- Teste 1: Vetor Aleatório ---
-        printf("\n--- Teste 1: Vetor Aleatório ---\n");
-        generateRandomArray(original, n);
-        
-        runSortTest(insertionSort, A, original, n, "Insertion Sort");
-        runSortTest(mergeSort, A, original, n, "Merge Sort");
-        runSortTest(quickSort, A, original, n, "Quick Sort"); 
+        // ===== VETOR DECRESCENTE =====
+        printf("\n--- Vetor Decrescente ---\n");
+        for (int rep = 1; rep <= repet; rep++) {
+            int* vetor_original = generateReverseSortedArray(tamanho);
+            int* vetor_trabalho = (int*)malloc(tamanho * sizeof(int));
 
-        // --- Teste 2: Vetor Crescente ---
-        printf("\n--- Teste 2: Vetor Crescente (Melhor Caso) ---\n");
-        generateSortedArray(original, n);
-        
-        runSortTest(insertionSort, A, original, n, "Insertion Sort");
-        runSortTest(mergeSort, A, original, n, "Merge Sort");
-        runSortTest(quickSort, A, original, n, "Quick Sort");
+            // Insertion Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            clock_t start = clock();
+            insertionSort(vetor_trabalho, tamanho);
+            clock_t end = clock();
+            double tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Decrescente,InsertionSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Insertion Sort: %.6f s\n", rep, tempo);
 
-        // --- Teste 3: Vetor Decrescente ---
-        printf("\n--- Teste 3: Vetor Decrescente (Pior Caso) ---\n");
-        generateReverseSortedArray(original, n);
-        
-        runSortTest(insertionSort, A, original, n, "Insertion Sort");
-        runSortTest(mergeSort, A, original, n, "Merge Sort");
-        runSortTest(quickSort, A, original, n, "Quick Sort");
+            // Merge Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            start = clock();
+            mergeSort(vetor_trabalho, tamanho);
+            end = clock();
+            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Decrescente,MergeSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Merge Sort: %.6f s\n", rep, tempo);
 
-        free(original);
-        free(A);
+            // Quick Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            start = clock();
+            quickSort(vetor_trabalho, tamanho);
+            end = clock();
+            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Decrescente,QuickSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Quick Sort: %.6f s\n", rep, tempo);
+
+            free(vetor_original);
+            free(vetor_trabalho);
+        }
     }
+
+    fclose(csvFile);
+    printf("\n============================================\n");
+    printf("TESTES CONCLUIDOS!\n");
+    printf("Resultados salvos em: resultados_ordenacao.csv\n");
+    printf("============================================\n");
 
     return 0;
 }
