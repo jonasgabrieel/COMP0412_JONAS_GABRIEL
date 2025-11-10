@@ -272,7 +272,7 @@ Repeticao,Tamanho,Tipo_Vetor,Algoritmo,Tempo
 1,140000,Decrescente,InsertionSort,21.109000
 1,140000,Decrescente,MergeSort,0.041000
 1,140000,Decrescente,QuickSort,0.015000
-2,140000,Decrescente,InsertionSort,15339.039000
+2,140000,Decrescente,InsertionSort,15.039000
 2,140000,Decrescente,MergeSort,0.035000
 2,140000,Decrescente,QuickSort,0.012000
 3,140000,Decrescente,InsertionSort,21.629000
