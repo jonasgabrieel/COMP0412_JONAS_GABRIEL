@@ -157,6 +157,53 @@ void quickSort(int *A, int n) {
 }
 
 // ===================================================================
+// HEAP SORT
+// ===================================================================
+
+void maxheapfy(int *A, int m, int i) {
+    int e, d, aux, maior;
+    e = 2 * i + 1;  // Filho esquerdo
+    d = 2 * i + 2;  // Filho direito
+    
+    // Encontra o maior entre pai, filho esquerdo e direito
+    if ((e <= m) && (A[e] > A[i]))
+        maior = e;
+    else
+        maior = i;
+    
+    if ((d <= m) && (A[d] > A[maior]))  // CORRIGIDO: era d<=e
+        maior = d;
+    
+    // Se o maior não é o pai, troca e continua heapificando
+    if (maior != i) {
+        aux = A[i];
+        A[i] = A[maior];
+        A[maior] = aux;
+        maxheapfy(A, m, maior);
+    }
+}
+
+void build_maxheap(int *A, int n) {
+    for (int i = n / 2; i >= 0; i--)
+        maxheapfy(A, n - 1, i);  // CORRIGIDO: passa n-1 como limite
+}
+
+void heapSort(int *A, int n) {
+    int m, aux;
+    build_maxheap(A, n);
+    m = n - 1;
+    
+    for (int i = n - 1; i >= 1; i--) {
+        // Troca o maior (raiz) com o último elemento
+        aux = A[0];
+        A[0] = A[i];
+        A[i] = aux;
+        m--;
+        maxheapfy(A, m, 0);
+    }
+}
+
+// ===================================================================
 // MAIN - COM PARÂMETROS CONFIGURÁVEIS
 // ===================================================================
 
@@ -165,8 +212,8 @@ int main() {
 
     // ===== CONFIGURAÇÕES =====
     int repet = 10;           // Número de repetições por tamanho
-    int inicio = 100000;      // Tamanho inicial do vetor
-    int fim = 200000;        // Tamanho final do vetor
+    int inicio = 10000;      // Tamanho inicial do vetor
+    int fim = 250000;        // Tamanho final do vetor
     int step = 10000;        // Incremento
     // =========================
 
@@ -184,19 +231,20 @@ int main() {
     printf("============================================\n");
     printf("Repeticoes: %d\n", repet);
     printf("Tamanho: %d ate %d (incremento: %d)\n", inicio, fim, step);
+    printf("Algoritmos: Insertion, Merge, Quick, Heap\n");
     printf("============================================\n\n");
 
     // Loop pelos tamanhos
     for (int tamanho = inicio; tamanho <= fim; tamanho += step) {
         printf("\n>>> Testando tamanho: %d\n", tamanho);
-        /*
+
         // ===== VETOR ALEATÓRIO =====
         printf("\n--- Vetor Aleatorio ---\n");
         for (int rep = 1; rep <= repet; rep++) {
             int* vetor_original = generateRandomArray(tamanho);
             int* vetor_trabalho = (int*)malloc(tamanho * sizeof(int));
 
-            // Insertion Sort
+            /*
             copyArray(vetor_original, vetor_trabalho, tamanho);
             clock_t start = clock();
             insertionSort(vetor_trabalho, tamanho);
@@ -204,13 +252,13 @@ int main() {
             double tempo = (double)(end - start) / CLOCKS_PER_SEC;
             fprintf(csvFile, "%d,%d,Aleatorio,InsertionSort,%.6f\n", rep, tamanho, tempo);
             printf("  Rep %d - Insertion Sort: %.6f s\n", rep, tempo);
-
+            */
             // Merge Sort
             copyArray(vetor_original, vetor_trabalho, tamanho);
-            start = clock();
+            clock_t start = clock();
             mergeSort(vetor_trabalho, tamanho);
-            end = clock();
-            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            clock_t end = clock();
+            double tempo = (double)(end - start) / CLOCKS_PER_SEC;
             fprintf(csvFile, "%d,%d,Aleatorio,MergeSort,%.6f\n", rep, tamanho, tempo);
             printf("  Rep %d - Merge Sort: %.6f s\n", rep, tempo);
 
@@ -223,10 +271,18 @@ int main() {
             fprintf(csvFile, "%d,%d,Aleatorio,QuickSort,%.6f\n", rep, tamanho, tempo);
             printf("  Rep %d - Quick Sort: %.6f s\n", rep, tempo);
 
+            // Heap Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            start = clock();
+            heapSort(vetor_trabalho, tamanho);
+            end = clock();
+            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Aleatorio,HeapSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Heap Sort: %.6f s\n", rep, tempo);
+
             free(vetor_original);
             free(vetor_trabalho);
         }
-        */
 
         // ===== VETOR CRESCENTE =====
         printf("\n--- Vetor Crescente ---\n");
@@ -234,7 +290,7 @@ int main() {
             int* vetor_original = generateSortedArray(tamanho);
             int* vetor_trabalho = (int*)malloc(tamanho * sizeof(int));
 
-            // Insertion Sort
+            /*/
             copyArray(vetor_original, vetor_trabalho, tamanho);
             clock_t start = clock();
             insertionSort(vetor_trabalho, tamanho);
@@ -242,13 +298,13 @@ int main() {
             double tempo = (double)(end - start) / CLOCKS_PER_SEC;
             fprintf(csvFile, "%d,%d,Crescente,InsertionSort,%.6f\n", rep, tamanho, tempo);
             printf("  Rep %d - Insertion Sort: %.6f s\n", rep, tempo);
-
+            */
             // Merge Sort
             copyArray(vetor_original, vetor_trabalho, tamanho);
-            start = clock();
+            clock_t start = clock();
             mergeSort(vetor_trabalho, tamanho);
-            end = clock();
-            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            clock_t end = clock();
+            double tempo = (double)(end - start) / CLOCKS_PER_SEC;
             fprintf(csvFile, "%d,%d,Crescente,MergeSort,%.6f\n", rep, tamanho, tempo);
             printf("  Rep %d - Merge Sort: %.6f s\n", rep, tempo);
 
@@ -261,6 +317,15 @@ int main() {
             fprintf(csvFile, "%d,%d,Crescente,QuickSort,%.6f\n", rep, tamanho, tempo);
             printf("  Rep %d - Quick Sort: %.6f s\n", rep, tempo);
 
+            // Heap Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            start = clock();
+            heapSort(vetor_trabalho, tamanho);
+            end = clock();
+            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Crescente,HeapSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Heap Sort: %.6f s\n", rep, tempo);
+
             free(vetor_original);
             free(vetor_trabalho);
         }
@@ -271,21 +336,21 @@ int main() {
             int* vetor_original = generateReverseSortedArray(tamanho);
             int* vetor_trabalho = (int*)malloc(tamanho * sizeof(int));
 
-            // Insertion Sort
-            copyArray(vetor_original, vetor_trabalho, tamanho);
-            clock_t start = clock();
-            insertionSort(vetor_trabalho, tamanho);
-            clock_t end = clock();
-            double tempo = (double)(end - start) / CLOCKS_PER_SEC;
-            fprintf(csvFile, "%d,%d,Decrescente,InsertionSort,%.6f\n", rep, tamanho, tempo);
-            printf("  Rep %d - Insertion Sort: %.6f s\n", rep, tempo);
+            // // Insertion Sort
+            // copyArray(vetor_original, vetor_trabalho, tamanho);
+            // clock_t start = clock();
+            // insertionSort(vetor_trabalho, tamanho);
+            // clock_t end = clock();
+            // double tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            // fprintf(csvFile, "%d,%d,Decrescente,InsertionSort,%.6f\n", rep, tamanho, tempo);
+            // printf("  Rep %d - Insertion Sort: %.6f s\n", rep, tempo);
 
             // Merge Sort
             copyArray(vetor_original, vetor_trabalho, tamanho);
-            start = clock();
+            clock_t start = clock();
             mergeSort(vetor_trabalho, tamanho);
-            end = clock();
-            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            clock_t end = clock();
+            double tempo = (double)(end - start) / CLOCKS_PER_SEC;
             fprintf(csvFile, "%d,%d,Decrescente,MergeSort,%.6f\n", rep, tamanho, tempo);
             printf("  Rep %d - Merge Sort: %.6f s\n", rep, tempo);
 
@@ -297,6 +362,15 @@ int main() {
             tempo = (double)(end - start) / CLOCKS_PER_SEC;
             fprintf(csvFile, "%d,%d,Decrescente,QuickSort,%.6f\n", rep, tamanho, tempo);
             printf("  Rep %d - Quick Sort: %.6f s\n", rep, tempo);
+
+            // Heap Sort
+            copyArray(vetor_original, vetor_trabalho, tamanho);
+            start = clock();
+            heapSort(vetor_trabalho, tamanho);
+            end = clock();
+            tempo = (double)(end - start) / CLOCKS_PER_SEC;
+            fprintf(csvFile, "%d,%d,Decrescente,HeapSort,%.6f\n", rep, tamanho, tempo);
+            printf("  Rep %d - Heap Sort: %.6f s\n", rep, tempo);
 
             free(vetor_original);
             free(vetor_trabalho);
